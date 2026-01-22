@@ -1,0 +1,106 @@
+name: Slack Bot
+
+# SETUP REQUIRED:
+# 1. Add secret GH_PAT (GitHub Personal Access Token with repo, workflow, read:org permissions)
+# 2. Add secret CLAUDE_CODE_OAUTH_TOKEN (Get from: https://github.com/apps/claude-code)
+# 3. Add secret NPM_TOKEN (npm authentication token for private packages, optional)
+
+on:
+  workflow_dispatch:
+    inputs:
+      userMessage:
+        description: "Message in Slack"
+        required: false
+        type: string
+        default: ""
+      userId:
+        description: "User Id from Slack"
+        required: true
+        type: string
+      channelId:
+        description: "Channel Id from Slack"
+        required: true
+        type: string
+
+jobs:
+  bot-answer:
+    name: Slack bot answer
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+
+    steps:
+      - name: Set target repo
+        id: target_repo
+        run: |
+            # Just repo name, add default owner
+            OWNER="omolodetskyi"
+            REPO_NAME="getNewsAgent"
+            FULL_REPO="$OWNER/$REPO_NAME"
+          echo "full_repo=$FULL_REPO" >> $GITHUB_OUTPUT
+          echo "owner=$OWNER" >> $GITHUB_OUTPUT
+          echo "repo=$REPO_NAME" >> $GITHUB_OUTPUT
+          echo "🎯 Will look at: $FULL_REPO (owner: $OWNER, repo: $REPO_NAME)"
+
+      - name: 🎯 Support - Analyze customer question and create answer
+        id: analyze
+        uses: anthropics/claude-code-action@beta
+        with:
+          mode: agent
+          github_token: ${{ secrets.GH_PAT }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          settings: '{"model":"claude-opus-4-5-20251101"}'
+          direct_prompt: |
+            ═══════════════════════════════════════════════════════════════════
+            🎯 ROLE:SUPPORT AGENT 
+            ═══════════════════════════════════════════════════════════════════
+
+            You are the SUPPORT. Your ONLY job is to analyze and answer questions about product.
+            You MUST NOT modify any files. You MUST NOT make any code changes.
+
+            ═══════════════════════════════════════════════════════════════════
+            YOUR TASK:
+            ═══════════════════════════════════════════════════════════════════
+
+            1. GET customer question from inputs
+               → Use userMessage as customer question
+            2. READ Agents.md for instructions
+            3. LOCATE RELEVANT FILES
+               → Use Grep/Glob to find files related to the bug
+               → Search for relevant code patterns
+               → Identify which files used for functionality which concerns customer question.
+            4. CREATE A GOOD ANSWER
+               → USING instruction from Agents.md and based on information you found in code create an answer to customer.
+
+            ═══════════════════════════════════════════════════════════════════
+            ⛔ WHAT YOU MUST NOT DO:
+            ═══════════════════════════════════════════════════════════════════
+
+            ❌ Do NOT use Edit tool
+            ❌ Do NOT use Write tool
+            ❌ Do NOT modify any files
+            ❌ Do NOT create any files
+            ❌ Do NOT make code changes
+
+            You are ONLY allowed to:
+            ✅ Read files
+            ✅ Search files (Grep/Glob)
+            ✅ Analyze code
+            ✅ Create a plan (JSON output)
+
+            ═══════════════════════════════════════════════════════════════════
+            OUTPUT FORMAT (JSON ONLY):
+            ═══════════════════════════════════════════════════════════════════
+
+            Return ONLY this JSON structure (no markdown blocks):
+
+            {
+              "response": {
+                "answer": "Answer to customer",
+              },
+              "guidelines": {
+                "answer": "Instructions from Agents.md"
+              }
+            }
