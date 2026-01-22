@@ -21,6 +21,11 @@ on:
         description: "Channel Id from Slack"
         required: true
         type: string
+      resumeUrl:
+        description: "Url to resume"
+        required: false
+        type: string
+        default: ""
 
 jobs:
   bot-answer:
