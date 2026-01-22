@@ -35,10 +35,10 @@ jobs:
       - name: Set target repo
         id: target_repo
         run: |
-            # Just repo name, add default owner
-            OWNER="omolodetskyi"
-            REPO_NAME="getNewsAgent"
-            FULL_REPO="$OWNER/$REPO_NAME"
+          # Just repo name, add default owner
+          OWNER="omolodetskyi"
+          REPO_NAME="getNewsAgent"
+          FULL_REPO="$OWNER/$REPO_NAME"
           echo "full_repo=$FULL_REPO" >> $GITHUB_OUTPUT
           echo "owner=$OWNER" >> $GITHUB_OUTPUT
           echo "repo=$REPO_NAME" >> $GITHUB_OUTPUT
