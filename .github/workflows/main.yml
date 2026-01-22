@@ -49,6 +49,15 @@ jobs:
           echo "repo=$REPO_NAME" >> $GITHUB_OUTPUT
           echo "🎯 Will look at: $FULL_REPO (owner: $OWNER, repo: $REPO_NAME)"
 
+      # --- ДОДАНО КРОК CHECKOUT ---
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.target_repo.outputs.full_repo }}
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+      # ----------------------------
+
       - name: 🎯 Support - Analyze customer question and create answer
         id: analyze
         uses: anthropics/claude-code-action@beta
